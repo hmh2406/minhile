@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Le Van Minh Competitive Programming IDE</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html,body{
+
+    width:100%;
+    height:100%;
+
+    overflow:hidden;
+
+    background:#1d1e23;
+
+    font-family:'Open Sans',sans-serif;
+}
+
+.topbar{
+
+    width:100%;
+    height:60px;
+
+    background:#111216;
+
+    border-bottom:1px solid #2b2d36;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    padding:0 20px;
+}
+
+.logo{
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:700;
+}
+
+.right-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+}
+
+.run-btn{
+
+    background:#2A67B1;
+
+    color:white;
+
+    border:none;
+
+    padding:10px 22px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    font-weight:600;
+
+    transition:0.2s;
+}
+
+.run-btn:hover{
+
+    background:#3c7ed1;
+}
+
+.status{
+
+    color:#aaa;
+
+    font-size:14px;
+}
+
+.main{
+
+    width:100%;
+
+    height:calc(100% - 60px);
+
+    display:flex;
+}
+
+#editor{
+
+    width:65%;
+
+    height:100%;
+}
+
+.right{
+
+    width:35%;
+
+    height:100%;
+
+    display:flex;
+
+    flex-direction:column;
+
+    border-left:1px solid #2b2d36;
+}
+
+.panel-title{
+
+    background:#16181d;
+
+    color:#aaa;
+
+    padding:10px 15px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    border-bottom:1px solid #2b2d36;
+}
+
+#input{
+
+    width:100%;
+
+    height:25%;
+
+    background:#111216;
+
+    color:white;
+
+    border:none;
+
+    resize:none;
+
+    outline:none;
+
+    padding:15px;
+
+    font-size:14px;
+
+    font-family:'Roboto Mono',monospace;
+}
+
+#output{
+
+    flex:1;
+
+    background:#15161a;
+
+    color:#00ff88;
+
+    padding:15px;
+
+    overflow:auto;
+
+    white-space:pre-wrap;
+
+    font-size:14px;
+
+    font-family:'Roboto Mono',monospace;
+}
+
+.stats{
+
+    background:#111216;
+
+    border-top:1px solid #2b2d36;
+
+    padding:15px;
+
+    line-height:2;
+
+    font-family:'Roboto Mono',monospace;
+
+    color:#ccc;
+}
+
+.good{
+    color:#00ff88;
+}
+
+.warn{
+    color:#ffaa00;
+}
+
+.bad{
+    color:#ff5555;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+
+<div class="logo">
+⚡ Minh IDE
+</div>
+
+<div class="right-top">
+
+<div class="status" id="status">
+Ready
+</div>
+
+<button class="run-btn" onclick="runCode()">
+▶ Run
+</button>
+
+</div>
+
+</div>
+
+<div class="main">
+
+<div id="editor"></div>
+
+<div class="right">
+
+<div class="panel-title">
+INPUT
+</div>
+
+<textarea id="input">5 7</textarea>
+
+<div class="panel-title">
+OUTPUT
+</div>
+
+<div id="output">
+Output...
+</div>
+
+<div class="stats">
+
+<div>
+Complexity:
+<span id="complexity" class="good">
+O(1)
+</span>
+</div>
+
+<div>
+Estimated Ops:
+<span id="ops" class="good">
+1
+</span>
+</div>
+
+<div>
+Execution Time:
+<span id="time" class="good">
+0 ms
+</span>
+</div>
+
+<div>
+TLE Risk:
+<span id="tle" class="good">
+LOW
+</span>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+
+<script>
+
+require.config({
+
+    paths:{
+        vs:'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs'
+    }
+
+});
+
+window.MonacoEnvironment = {
+
+    getWorkerUrl:function(){
+
+        return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+
+            self.MonacoEnvironment = {
+
+                baseUrl:'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/'
+
+            };
+
+            importScripts(
+                'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/base/worker/workerMain.js'
+            );
+
+        `)}`;
+
+    }
+
+};
+
+let editor;
+
+require(['vs/editor/editor.main'],function(){
+
+    editor = monaco.editor.create(
+
+        document.getElementById('editor'),
+
+        {
+
+            value:
+`#include <bits/stdc++.h>
+using namespace std;
+
+int main(){
+
+    int n;
+
+    cin >> n;
+
+    vector<int> a(n);
+
+    for(int i=0;i<n;i++){
+
+        cin >> a[i];
+
+    }
+
+    sort(a.begin(),a.end());
+
+    for(int x : a){
+
+        cout << x << ' ';
+
+    }
+
+}`,
+
+            language:'cpp',
+
+            theme:'vs-dark',
+
+            automaticLayout:true,
+
+            fontSize:15,
+
+            fontFamily:'Roboto Mono',
+
+            minimap:{
+                enabled:true
+            }
+
+        }
+
+    );
+
+    updateComplexity();
+
+    editor.onDidChangeModelContent(function(){
+
+        updateComplexity();
+
+    });
+
+});
+
+function analyzeComplexity(code){
+
+    code = code.replace(/\r/g,'');
+
+    const lines = code.split('\n');
+
+    let maxLoopDepth = 0;
+
+    let currentDepth = 0;
+
+    let hasBitmask = false;
+
+    let hasSort = false;
+
+    let hasBinarySearch = false;
+
+    let hasDFS = false;
+
+    let hasSegmentTree = false;
+
+    let hasFenwick = false;
+
+    let hasDijkstra = false;
+
+    let hasBFS = false;
+
+    let hasRecursion = false;
+
+    let hasPriorityQueue = false;
+
+    let hasMap = false;
+
+    let hasSet = false;
+
+    let hasUnordered = false;
+
+    let hasMatrixExpo = false;
+
+    let hasFFT = false;
+
+    let hasDSU = false;
+
+    let recursiveFunctions = new Set();
+
+    for(let line of lines){
+
+        let funcMatch =
+            line.match(
+                /^\s*(int|long long|void|double|bool|string)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
+            );
+
+        if(funcMatch){
+
+            recursiveFunctions.add(funcMatch[2]);
+
+        }
+
+    }
+
+    for(let line of lines){
+
+        let t = line.trim();
+
+        if(
+            t.startsWith("for(") ||
+            t.startsWith("for (") ||
+            t.startsWith("while(") ||
+            t.startsWith("while (")
+        ){
+
+            currentDepth++;
+
+            maxLoopDepth =
+                Math.max(maxLoopDepth,currentDepth);
+
+        }
+
+        if(t.includes("}")){
+
+            currentDepth =
+                Math.max(0,currentDepth-1);
+
+        }
+
+        if(
+            t.includes("1<<") ||
+            t.includes("1 <<") ||
+            t.includes("(1LL<<") ||
+            t.includes("(1LL <<")
+        ){
+
+            hasBitmask = true;
+
+        }
+
+        if(t.includes("sort(")){
+
+            hasSort = true;
+
+        }
+
+        if(
+            t.includes("lower_bound") ||
+            t.includes("upper_bound") ||
+            t.includes("binary_search")
+        ){
+
+            hasBinarySearch = true;
+
+        }
+
+        if(t.includes("dfs(")){
+
+            hasDFS = true;
+
+        }
+
+        if(t.includes("bfs(")){
+
+            hasBFS = true;
+
+        }
+
+        if(
+            t.includes("priority_queue") &&
+            (
+                t.includes("dist") ||
+                t.includes("dijkstra")
+            )
+        ){
+
+            hasDijkstra = true;
+
+        }
+
+        if(
+            t.includes("segment") ||
+            t.includes("segtree") ||
+            t.includes("lazy")
+        ){
+
+            hasSegmentTree = true;
+
+        }
+
+        if(
+            t.includes("fenwick") ||
+            t.includes("BIT") ||
+            t.includes("bit[")
+        ){
+
+            hasFenwick = true;
+
+        }
+
+        if(t.includes("map<")){
+
+            hasMap = true;
+
+        }
+
+        if(t.includes("set<")){
+
+            hasSet = true;
+
+        }
+
+        if(
+            t.includes("unordered_map") ||
+            t.includes("unordered_set")
+        ){
+
+            hasUnordered = true;
+
+        }
+
+        if(
+            t.includes("matrix") &&
+            t.includes("*")
+        ){
+
+            hasMatrixExpo = true;
+
+        }
+
+        if(
+            t.includes("fft") ||
+            t.includes("ntt")
+        ){
+
+            hasFFT = true;
+
+        }
+
+        if(
+            t.includes("find(") &&
+            t.includes("union")
+        ){
+
+            hasDSU = true;
+
+        }
+
+        for(let fn of recursiveFunctions){
+
+            if(
+                t.includes(fn + "(") &&
+                !t.startsWith("int " + fn) &&
+                !t.startsWith("void " + fn)
+            ){
+
+                hasRecursion = true;
+
+            }
+
+        }
+
+    }
+
+    if(hasFFT){
+
+        return "O(n log n) [FFT/NTT]";
+
+    }
+
+    if(hasMatrixExpo){
+
+        return "O(log n) [Matrix Exponentiation]";
+
+    }
+
+    if(hasDijkstra){
+
+        return "O((V+E) log V)";
+
+    }
+
+    if(hasSegmentTree){
+
+        return "O(log n) per query [Segment Tree]";
+
+    }
+
+    if(hasFenwick){
+
+        return "O(log n) per query [Fenwick Tree]";
+
+    }
+
+    if(hasDSU){
+
+        return "O(alpha(n)) [DSU]";
+
+    }
+
+    if(hasDFS || hasBFS){
+
+        return "O(V + E)";
+
+    }
+
+    if(hasBitmask){
+
+        if(maxLoopDepth>=1){
+
+            return "O(2^n * n)";
+
+        }
+
+        return "O(2^n)";
+
+    }
+
+    if(hasSort){
+
+        if(maxLoopDepth>=1){
+
+            return "O(n² log n)";
+
+        }
+
+        return "O(n log n)";
+
+    }
+
+    if(hasBinarySearch){
+
+        if(maxLoopDepth>=1){
+
+            return "O(n log n)";
+
+        }
+
+        return "O(log n)";
+
+    }
+
+    if(hasRecursion){
+
+        return "Recursive";
+
+    }
+
+    if(maxLoopDepth===0){
+
+        return "O(1)";
+
+    }
+
+    if(maxLoopDepth===1){
+
+        return "O(n)";
+
+    }
+
+    if(maxLoopDepth===2){
+
+        return "O(n²)";
+
+    }
+
+    if(maxLoopDepth===3){
+
+        return "O(n³)";
+
+    }
+
+    return "O(n^" + maxLoopDepth + ")";
+
+}
+
+function estimateOps(complexity){
+
+    if(complexity.includes("O(1)"))
+        return "1";
+
+    if(complexity.includes("log n"))
+        return "~2e6";
+
+    if(complexity.includes("O(n)"))
+        return "1e5";
+
+    if(complexity.includes("O(n²)"))
+        return "1e10";
+
+    if(complexity.includes("2^n"))
+        return "Explosive";
+
+    return "Huge";
+}
+
+function tleRisk(complexity){
+
+    if(
+        complexity.includes("O(1)") ||
+        complexity.includes("O(log n)") ||
+        complexity.includes("O(n)") ||
+        complexity.includes("O(n log n)")
+    ){
+
+        return {
+            text:"LOW",
+            cls:"good"
+        };
+
+    }
+
+    if(
+        complexity.includes("O(n²)")
+    ){
+
+        return {
+            text:"MEDIUM",
+            cls:"warn"
+        };
+
+    }
+
+    return {
+        text:"HIGH",
+        cls:"bad"
+    };
+
+}
+
+function updateComplexity(){
+
+    const code =
+        editor.getValue();
+
+    const complexity =
+        analyzeComplexity(code);
+
+    document.getElementById("complexity").innerText =
+        complexity;
+
+    document.getElementById("ops").innerText =
+        estimateOps(complexity);
+
+    const risk =
+        tleRisk(complexity);
+
+    const tle =
+        document.getElementById("tle");
+
+    tle.innerText =
+        risk.text;
+
+    tle.className =
+        risk.cls;
+
+}
+
+async function runCode(){
+
+    const output =
+        document.getElementById("output");
+
+    const status =
+        document.getElementById("status");
+
+    const timeDiv =
+        document.getElementById("time");
+
+    output.style.color =
+        "#00ff88";
+
+    output.innerText =
+        "Running...";
+
+    status.innerText =
+        "Compiling...";
+
+    const start =
+        performance.now();
+
+    try{
+
+        const create =
+            await fetch(
+
+                "https://ce.judge0.com/submissions?base64_encoded=false&wait=false",
+
+                {
+
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+
+                    body:JSON.stringify({
+
+                        language_id:54,
+
+                        source_code:
+                            editor.getValue(),
+
+                        stdin:
+                            document.getElementById("input").value
+
+                    })
+
+                }
+
+            );
+
+        const createData =
+            await create.json();
+
+        if(!createData.token){
+
+            output.style.color =
+                "#ff5555";
+
+            output.innerText =
+                "Cannot create submission";
+
+            return;
+        }
+
+        const token =
+            createData.token;
+
+        let result;
+
+        while(true){
+
+            const res =
+                await fetch(
+
+                    `https://ce.judge0.com/submissions/${token}?base64_encoded=false`
+
+                );
+
+            result =
+                await res.json();
+
+            if(
+                result.status &&
+                result.status.id > 2
+            ){
+                break;
+            }
+
+            await new Promise(
+                r => setTimeout(r,300)
+            );
+
+        }
+
+        const end =
+            performance.now();
+
+        const elapsed =
+            (end - start).toFixed(2);
+
+        timeDiv.innerText =
+            elapsed + " ms";
+
+        status.innerText =
+            result.status.description;
+
+        if(result.compile_output){
+
+            output.style.color =
+                "#ff5555";
+
+            output.innerText =
+                result.compile_output;
+
+            return;
+        }
+
+        if(result.stderr){
+
+            output.style.color =
+                "#ff5555";
+
+            output.innerText =
+                result.stderr;
+
+            return;
+        }
+
+        output.style.color =
+            "#00ff88";
+
+        output.innerText =
+            result.stdout || "No output";
+
+    }
+
+    catch(err){
+
+        status.innerText =
+            "Error";
+
+        output.style.color =
+            "#ff5555";
+
+        output.innerText =
+            err.toString();
+
+    }
+
+}
+
+document.addEventListener("keydown",function(e){
+
+    if(e.ctrlKey && e.key==="Enter"){
+
+        runCode();
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
